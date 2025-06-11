@@ -19,6 +19,9 @@ public class FirstScreen implements Screen {
     private Stage stage;
     private ImageButton startbutton, quitbutton;
 
+    public FirstScreen(Main main) {
+    }
+
 
     @Override
     public void show() {
