@@ -32,8 +32,8 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
   implementation "de.tomgrill.gdxdialogs:gdx-dialogs-desktop:$dialogsVersion"
+  implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   implementation project(':core')
-
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"
 

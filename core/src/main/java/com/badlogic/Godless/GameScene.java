@@ -3,22 +3,20 @@ package com.badlogic.Godless;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 public class GameScene implements Screen{
+    private float timeElapsed = 0;
+    private BitmapFont font;
+    private GlyphLayout layout;
     private Texture groundtexture;
     private TextureRegion groundregion;
     private SpriteBatch spriteBatch;
@@ -32,6 +30,9 @@ public class GameScene implements Screen{
 
     public GameScene(Game game){
         this.game = game;
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+        layout = new GlyphLayout();
     }
 
     @Override
@@ -55,6 +56,11 @@ public class GameScene implements Screen{
     @Override
     public void render(float delta){
         character.update(delta);
+        timeElapsed += delta;
+
+        int minutes = (int) (timeElapsed / 60);
+        int seconds = (int) (timeElapsed % 60);
+        String time = String.format("%02d:%02d", minutes, seconds);
 
         camera.position.set(character.getPosition().x + character.texture.getWidth() * character.size / 2,
             character.getPosition().y + character.texture.getHeight() * character.size / 2, 0);
@@ -74,8 +80,13 @@ public class GameScene implements Screen{
             }
         }
 
-        // Render the character without its own begin()/end()
+        //character
         character.render(spriteBatch);
+
+        layout.setText(font, time); // Example timer text
+        float x = camera.position.x + Gdx.graphics.getWidth() / 2- layout.width - 10; // Align right
+        float y = camera.position.y + Gdx.graphics.getHeight() / 2- 20; // Align top
+        font.draw(spriteBatch, layout, x, y);
 
         spriteBatch.end(); // Ensure `end()` is properly called
         stage.act(delta);
@@ -104,6 +115,7 @@ public class GameScene implements Screen{
 
     @Override
     public void dispose(){
+        font.dispose();
         spriteBatch.dispose();
         stage.dispose();
         character.dispose();
