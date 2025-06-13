@@ -1,5 +1,6 @@
 package com.badlogic.Godless;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
@@ -17,8 +18,9 @@ public class FirstScreen implements Screen {
     private SpriteBatch spriteBatch;
     private Stage stage;
     private ImageButton startbutton, quitbutton;
-    private Main game;
-    public FirstScreen(Main game) {
+    private final Game game;
+    private Screen GameScene;
+    public FirstScreen(Game game) {
         this.game = game;
     }
 
@@ -45,6 +47,7 @@ public class FirstScreen implements Screen {
         startbutton.addListener(new ClickListener(){
             @Override
            public void clicked(InputEvent event, float x, float y){
+                game.setScreen(new GameScene(game));
                System.out.println("Start!");
            }
         });
@@ -101,6 +104,7 @@ public class FirstScreen implements Screen {
         spriteBatch.dispose();
         background.dispose();
         stage.dispose();
+        background.dispose();
         // Destroy screen's assets here.
     }
 }
