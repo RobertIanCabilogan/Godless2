@@ -73,7 +73,8 @@ public class Gun {
             Vector2 barrelOffset = new Vector2(50, 0).rotateDeg(gunAngle);
             Vector2 bulletSpawnPos = new Vector2(position).add(barrelOffset);
 
-            bullets.add(new Bullet(bulletSpawnPos, mousePosition, gunAngle));// Bullet moves toward cursor
+            Vector2 direction = new Vector2(mousePosition).sub(position).nor(); // angle-independent
+            bullets.add(new Bullet(bulletSpawnPos, direction, gunAngle));
             Ammo -= 1;
             System.out.println(Ammo);
         }

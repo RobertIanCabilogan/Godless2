@@ -13,7 +13,6 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import java.util.ArrayList;
 
 public class GameScene implements Screen{
@@ -32,6 +31,8 @@ public class GameScene implements Screen{
     private ArrayList<Enemy> enemies;
     private ArrayList<Bullet> bullet;
     private Hud hud;
+    private float spawnTimer = 2;
+    public EnemySpawner enemySpawner;
 
     public GameScene(Game game){
         this.game = game;
@@ -42,6 +43,7 @@ public class GameScene implements Screen{
 
     @Override
     public void show(){
+        enemySpawner = new EnemySpawner(camera, character);
         shapeRenderer = new ShapeRenderer();
         spriteBatch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
@@ -51,21 +53,27 @@ public class GameScene implements Screen{
 
         groundregion = new TextureRegion(groundtexture);
         groundregion.setRegion(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera = new OrthographicCamera();
-        character = new Character(100, 100, camera);
 
+        camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
+        character = new Character(100, 100, camera);
         enemies = new ArrayList<>();
-        enemies.add(new Enemy(200, 300, character));
-        enemies.add(new Enemy(300, 400, character));
-        enemies.add(new Enemy(100, 500, character));
         bullet = new ArrayList<>();
         hud = new Hud(character, camera);
+
+        enemySpawner = new EnemySpawner(camera, character);
         Gdx.input.setInputProcessor(stage);
     }
     public void update(float delta){
-        enemies.removeIf(enemy -> enemy.isDead);
+        if (!GameData.Player_Death && spawnTimer <= 0) {
+            Enemy enemy = enemySpawner.spawn();
+            enemies.add(enemy);
+            spawnTimer = 2f; // for example, every 5 seconds
+        } else {
+            spawnTimer -= delta;
+        }
+        enemies.removeIf(enemy -> enemy.isDead || enemy.dissapear);
         bullet.removeIf(b -> b.shouldRemove);
         for (Bullet bullet : bullet) {
             bullet.update(delta, enemies);

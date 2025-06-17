@@ -22,10 +22,10 @@ public class Bullet {
 
 
 
-    public Bullet(Vector2 startpos, Vector2 targetpos, float gunAngle){
+    public Bullet(Vector2 startpos, Vector2 direction, float gunAngle) {
         bullet = new Texture("Sprites/Projectiles/Light Bullet.png");
         position = new Vector2(startpos);
-        velocity = new Vector2(targetpos).sub(position).nor().scl(Speed);
+        velocity = new Vector2(direction).scl(Speed);
         hitbox = new Rectangle(position.x, position.y, bullet.getWidth(), bullet.getHeight());
         this.angle = gunAngle;
     }

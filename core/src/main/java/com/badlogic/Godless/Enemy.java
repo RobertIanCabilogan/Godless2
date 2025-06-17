@@ -25,6 +25,8 @@ public class Enemy {
     private boolean isflipped = false;
     private Vector2 position;
     public boolean isDead = false;
+    private float dissapearTime = 6;
+    public boolean dissapear = false;
 
     public Enemy(float x, float y, Character player){
         this.player = player;
@@ -53,6 +55,14 @@ public class Enemy {
 
     public void update(float delta, ArrayList<Enemy> enemies) {
         elapsedtime += delta;
+        if (dissapear) return;
+
+        if (GameData.Player_Death){
+            dissapearTime -= delta;
+            if (dissapearTime <= 0){
+                dissapear = true;
+            }
+        }
         if (!GameData.Player_Death) {
             if (!GameData.Player_Flee) {
                 // Normal chase behavior
@@ -108,10 +118,10 @@ public class Enemy {
     }
 
     public void takeDamage(int amount){
-        System.out.println(Health);
         Health -= amount;
         if (Health <= 0){
             isDead = true;
+            GameData.kills += 1;
         }
     }
 

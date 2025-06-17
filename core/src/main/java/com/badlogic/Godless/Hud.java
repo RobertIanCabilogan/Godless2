@@ -33,11 +33,14 @@ public class Hud {
     private float timeElapsed = 0;
     private boolean isVisible = true;
     private BitmapFont font;
+    private BitmapFont largeFont;
 
     public Hud(Character player, OrthographicCamera camera){
         this.player = player;
         font = new BitmapFont();
         font.getData().setScale(2f);
+        largeFont = new BitmapFont();
+        largeFont.getData().setScale(3f);
         if (camera == null){
             System.out.println("No Camera");
         }
@@ -187,6 +190,7 @@ public class Hud {
         float timerY = camera.position.y + (camera.viewportHeight / 2) - 30; // Top edge
         int minutes = (int) (timeElapsed / 60);
         int seconds = (int) (timeElapsed % 60);
+        largeFont.draw(batch, String.valueOf(GameData.kills), timerX - 850, timerY);
         String timerText = String.format("%02d:%02d", minutes, seconds);
         font.draw(batch, timerText, timerX, timerY);
 
