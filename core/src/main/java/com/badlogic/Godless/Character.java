@@ -164,4 +164,8 @@ public class Character {
     public Gun getGun() {
         return gun;
     }
+
+    public void reset() {
+        health = 3;
+    }
 }

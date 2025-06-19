@@ -196,6 +196,10 @@ public class Hud {
 
     }
 
+    public float gettimeElapsed(){
+        return timeElapsed;
+    }
+
     public void dispose(){
         healthyTexture.dispose();
         injuredTexture.dispose();

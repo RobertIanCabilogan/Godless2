@@ -13,8 +13,8 @@ public class EnemySpawner {
     private Character target;
     private Random random = new Random();
     private int enemiesPerSpawn = 1;
-    private int nextKillThreshold = 15;
-
+    private float timeElapsed = 0f;
+    private float nextTimeThreshold = 60f;
     public EnemySpawner(OrthographicCamera camera, Character target) {
         this.camera = camera;
         this.target = target;
@@ -51,11 +51,6 @@ public class EnemySpawner {
         // Check if kill threshold is reached
         if (GameData.Player_Death) return new ArrayList<>();
 
-        if (GameData.kills >= nextKillThreshold) {
-            enemiesPerSpawn += 1;
-            nextKillThreshold += 50;
-            System.out.println("Enemy count increased! Now spawning: " + enemiesPerSpawn);
-        }
         List<Enemy> newEnemies = new ArrayList<>();
         for (int i = 0; i < enemiesPerSpawn; i++) {
             newEnemies.add(spawn());
@@ -63,7 +58,18 @@ public class EnemySpawner {
         }
         return newEnemies;
     }
+    public void update(float delta) {
+        if (GameData.Player_Death) return;
 
+        timeElapsed += delta;
+        if (timeElapsed >= nextTimeThreshold) {
+            enemiesPerSpawn += 1;
+            nextTimeThreshold += 30f;
+
+            System.out.println("Survived 30s! Enemies per spawn: " + enemiesPerSpawn);
+        }
+    }
 
 
 }
+
