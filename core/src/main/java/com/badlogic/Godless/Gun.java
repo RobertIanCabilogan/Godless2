@@ -22,12 +22,16 @@ public class Gun {
         public boolean isreloading = false;
         private OrthographicCamera camera;
         private float scale = 0.5f;
-        public Gun(OrthographicCamera cam){
+        private Vector2 adjustedPosition = new Vector2();
+
+
+    public Gun(OrthographicCamera cam){
             this.camera = cam;
             guntexture = new Texture("Sprites/Guns/Gun_1.png");
             position = new Vector2();
         }
         public void update(Vector2 playerPosition, float delta){
+            adjustedPosition.set(playerPosition);
             position.set(playerPosition.x, playerPosition.y);
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.R) && Ammo < maxAmmo && !isreloading) {
@@ -68,12 +72,20 @@ public class Gun {
             Vector3 worldCoords = camera.unproject(new Vector3(mousePosition.x, mousePosition.y, 0));
             mousePosition.set(worldCoords.x, worldCoords.y);
 
-            float gunAngle = new Vector2(mousePosition).sub(position).angleDeg();
+            Vector2 direction = new Vector2(mousePosition).sub(adjustedPosition).nor();
+            float gunAngle = direction.angleDeg();
 
-            Vector2 barrelOffset = new Vector2(50, 0).rotateDeg(gunAngle);
-            Vector2 bulletSpawnPos = new Vector2(position).add(barrelOffset);
+            float barrelDistance = guntexture.getWidth() * scale / 2f;
+            float verticalOffset =  50.5f * scale;
 
-            Vector2 direction = new Vector2(mousePosition).sub(position).nor(); // angle-independent
+            Vector2 localOffset = new Vector2(barrelDistance, verticalOffset);
+            Vector2 barrelOffset = localOffset.rotateDeg(gunAngle);
+            boolean isFlipped = Gdx.input.getX() < camera.project(new Vector3(adjustedPosition.x, adjustedPosition.y, 0)).x;
+            if (isFlipped) {
+                barrelOffset.x *= -1;
+            }
+            Vector2 bulletSpawnPos = new Vector2(adjustedPosition).add(barrelOffset);
+
             bullets.add(new Bullet(bulletSpawnPos, direction, gunAngle));
             Ammo -= 1;
             System.out.println(Ammo);

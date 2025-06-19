@@ -64,7 +64,7 @@ public class EnemySpawner {
         timeElapsed += delta;
         if (timeElapsed >= nextTimeThreshold) {
             enemiesPerSpawn += 1;
-            nextTimeThreshold += 30f;
+            nextTimeThreshold += 60f;
 
             System.out.println("Survived 30s! Enemies per spawn: " + enemiesPerSpawn);
         }
