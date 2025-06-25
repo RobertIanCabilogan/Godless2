@@ -3,20 +3,27 @@ package com.badlogic.Godless;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+
 import java.util.List;
 
 /** First screen of the application. Displayed after the application is created. */
 public class FirstScreen implements Screen {
+    private OrthographicCamera camera;
     private Texture background;
     private SpriteBatch spriteBatch;
+    private Sprite titleSprite;
     private Stage stage;
     private ImageButton startbutton, quitbutton, leaderboardButton;
     private final Game game;
@@ -29,20 +36,28 @@ public class FirstScreen implements Screen {
     @Override
     public void show() {
         spriteBatch = new SpriteBatch();
-        stage = new Stage(new ScreenViewport());
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 1280, 720);
+        stage = new Stage(new StretchViewport(1280, 720, camera));
         Gdx.input.setInputProcessor(stage);
+
         background = new Texture("sprites/UI/Background.png");
+        Texture title = new Texture("Sprites/UI/Title.png");
         Texture startTexture = new Texture("sprites/UI/Start_Button.png");
         Texture quitTexture = new Texture("sprites/UI/Quit_Button.png");
         Texture leaderboardTexture = new Texture("Sprites/UI/Rank_Button.png");
 
+
+        titleSprite = new Sprite(title);
         startbutton = new ImageButton(new TextureRegionDrawable(startTexture));
         quitbutton = new ImageButton(new TextureRegionDrawable(quitTexture));
         leaderboardButton = new ImageButton(new TextureRegionDrawable(leaderboardTexture));
 
+        titleSprite.setScale(2, 2);
         startbutton.setPosition(150, 125);
         quitbutton.setPosition(1000, 125);
         leaderboardButton.setPosition(550, 125);
+        titleSprite.setPosition((camera.viewportWidth - titleSprite.getWidth()) / 2f, camera.viewportHeight - titleSprite.getHeight() - 100);
 
         stage.addActor(startbutton);
         stage.addActor(quitbutton);
@@ -74,22 +89,25 @@ public class FirstScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
-        spriteBatch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        spriteBatch.draw(background, 0, 0, camera.viewportWidth, camera.viewportHeight);
+        titleSprite.draw(spriteBatch);
         spriteBatch.end();
-
         stage.act(delta);
         stage.draw();
-        // Draw your screen here. "delta" is the time since last render in seconds.
     }
+
+
 
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
-
         startbutton.setPosition(150, 125);
-        quitbutton.setPosition(width - 250, 125);
-        leaderboardButton.setPosition((width / 2f) - (leaderboardButton.getWidth() / 2f), 125);
+        quitbutton.setPosition(stage.getViewport().getWorldWidth() - 250, 125);
+        leaderboardButton.setPosition((stage.getViewport().getWorldWidth() - leaderboardButton.getWidth()) / 2f, 125);
+
+
         // Recalculate button positions based on new screen size
 
     }
@@ -115,6 +133,5 @@ public class FirstScreen implements Screen {
         background.dispose();
         stage.dispose();
         background.dispose();
-        // Destroy screen's assets here.
     }
 }

@@ -1,9 +1,11 @@
 package com.badlogic.Godless;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
@@ -48,12 +50,23 @@ public class Enemy {
         walkinganimation.setPlayMode(Animation.PlayMode.LOOP);
 
         position = new Vector2(x,y);
-        hurtbox = new Rectangle(position.x, position.y, enemtexture.getWidth() * 0.8f, enemtexture.getHeight() * 0.8f);
+        float hurtboxWidth = enemtexture.getWidth() - 200;
+        float hurtboxHeight = enemtexture.getHeight();
+
+// Center the hurtbox on the sprite
+        float hurtboxX = position.x + (enemtexture.getWidth() - hurtboxWidth) / 2f;
+        float hurtboxY = position.y + (enemtexture.getHeight() - hurtboxHeight) / 2f;
+
+        hurtbox = new Rectangle(hurtboxX, hurtboxY, hurtboxWidth, hurtboxHeight);
+
         hitbox = new Rectangle(position.x, position.y, enemtexture.getWidth() - 175, enemtexture.getHeight() - 35);
         collision = new Rectangle(position.x, position.y, enemtexture.getWidth() - 20, enemtexture.getHeight());
     }
 
     public void update(float delta, ArrayList<Enemy> enemies) {
+        if (GameData.isPaused){
+            return;
+        }
         elapsedtime += delta;
         if (dissapear) return;
 
@@ -93,7 +106,9 @@ public class Enemy {
         }
 
         collision.setPosition(position.x, position.y);
-        hitbox.setPosition(position.x, position.y);
+        hitbox.setPosition(    position.x + (enemtexture.getWidth() - hurtbox.width) / 2f,
+            position.y + (enemtexture.getHeight() - hurtbox.height) / 2f
+        );
     }
 
     public void render(SpriteBatch batch) {
@@ -113,6 +128,10 @@ public class Enemy {
         return hitbox;
     }
 
+    public void renderHurtbox(ShapeRenderer shapeRenderer){
+        shapeRenderer.setColor(Color.RED); // Bright red for visibility
+        shapeRenderer.rect(hurtbox.x, hurtbox.y, hurtbox.width, hurtbox.height);
+    }
     public Rectangle getHurtbox(){
         return hurtbox;
     }

@@ -3,6 +3,7 @@ package com.badlogic.Godless;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -17,10 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import org.w3c.dom.Text;
-import com.badlogic.Godless.PlayerStats;
-
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.Color;
 import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -34,9 +33,10 @@ public class GameScene implements Screen{
     private ShapeRenderer shapeRenderer;
     private Stage stage;
     //The Textures
-    private Texture groundtexture, retryButtonTex, menuButtonTex;
+    private Texture groundtexture, retryButtonTex, menuButtonTex, youDiedTex;
     private TextureRegion groundregion;
     private float scrollx = 0;
+    private Sprite deathTex;
     //Actors
     private Character character;
     private ArrayList<Enemy> enemies;
@@ -52,7 +52,6 @@ public class GameScene implements Screen{
     private float delay = 2.5f;
     private boolean finalDeath = false;
     private boolean showButtons = false;
-
     public GameScene(Game game){
         // Reset shared state
         GameData.Player_Death = false;
@@ -78,6 +77,9 @@ public class GameScene implements Screen{
         bullet = new ArrayList<Bullet>();
     }
 
+    private void togglePause(){
+        GameData.isPaused = !GameData.isPaused;
+    }
     @Override
     public void show(){
         enemySpawner = new EnemySpawner(camera, character);
@@ -90,6 +92,7 @@ public class GameScene implements Screen{
 
         retryButtonTex = new Texture("Sprites/UI/Retry_Button.png");
         menuButtonTex = new Texture("Sprites/UI/Menu_Button.png");
+        youDiedTex = new Texture("Sprites/UI/Death_Screen.png");
 
         retryButton = new ImageButton(new TextureRegionDrawable(retryButtonTex));
         menuButton = new ImageButton(new TextureRegionDrawable(menuButtonTex));
@@ -123,10 +126,12 @@ public class GameScene implements Screen{
         groundregion.setRegion(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         Gdx.input.setInputProcessor(stage);
     }
     public void update(float delta){
+        if (GameData.isPaused){
+            return;
+        }
         enemySpawner.update(delta);
         if(GameData.Player_Death && !finalDeath){
             delay -= delta;
@@ -147,6 +152,7 @@ public class GameScene implements Screen{
                 retryButton.setTouchable(Touchable.enabled);
                 menuButton.setVisible(true);
                 menuButton.setTouchable(Touchable.enabled);
+
             }
         }
         if (!GameData.Player_Death && spawnTimer <= 0) {
@@ -168,6 +174,9 @@ public class GameScene implements Screen{
 
     @Override
     public void render(float delta){
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            togglePause();
+        }
         update(delta);
         character.update(delta, enemies);
 
@@ -210,6 +219,18 @@ public class GameScene implements Screen{
             b.render(spriteBatch);
         }
         spriteBatch.end();
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.circle(character.getGun().getLastBulletSpawn().x, character.getGun().getLastBulletSpawn().y, 5);
+        shapeRenderer.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Use Line for outlines
+        for (Enemy enemy : enemies) {
+            enemy.renderHurtbox(shapeRenderer);
+        }
+        shapeRenderer.end();
+
+
         stage.act(delta);
         stage.draw();
     }

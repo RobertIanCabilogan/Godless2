@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.audio.Sound;
 
 import java.util.ArrayList;
 
@@ -34,11 +35,13 @@ public class Character {
     private float elapsedTime = 0;
     private float damCooldown = 0;
     private Gun gun;
+    //Audio
+    private Sound hurt;
 
     public Character(float x, float y, OrthographicCamera camera){
         // Load textures
-        texture = new Texture("Sprites/Players/WandererIdle.png");
-        spritesheet = new Texture("Sprites/Players/WandererWalk.png");
+        texture = new Texture("Sprites/Players/WandererIdle(Updated).png");
+        spritesheet = new Texture("Sprites/Players/WandererWalk (Updated).png");
         idle = new TextureRegion(texture);
 
         int row = 2;
@@ -58,7 +61,8 @@ public class Character {
         //Walking animation
         walkanimation = new Animation<>(0.1f, animationFrames);
         walkanimation.setPlayMode(Animation.PlayMode.LOOP);
-
+        //Audio
+        hurt = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Hurt.mp3"));
         //position & logic
         position = new Vector2(x, y);
         timer = new Timer();
@@ -70,6 +74,7 @@ public class Character {
         return health;
     }
     public void update(float delta, ArrayList<Enemy> enemies){
+        if (GameData.isPaused) return;
         if (health == 0){
             GameData.Player_Death = true;
             return;
@@ -84,16 +89,18 @@ public class Character {
         }
         for (Enemy enemy : enemies) {
             if (hurtbox.overlaps(enemy.getHitbox()) && damCooldown <= 0) {
+                hurt.play(1.0f);
                 health -= 1;
                 damCooldown = 1f;
             }
         }
-        float gunoffsetX = -10f; // Adjust gun placement horizontally
-        float gunoffsetY = 25f;  // Adjust gun placement vertically
-        gun.update(new Vector2(position.x + gunoffsetX, position.y + gunoffsetY), delta);
+        Vector2 playerCenter = new Vector2(
+            position.x + idle.getRegionWidth() * 0.5f,
+            position.y + idle.getRegionHeight() * 0.5f
+        );
+        gun.update(playerCenter, delta);
 
         gun.shoot();
-
 
 
         Movement();

@@ -133,6 +133,8 @@ public class Hud {
     }
 
     public void update(float delta){
+        if (GameData.isPaused) return;
+
         elapsedTime += delta;
         timeElapsed += delta;
         int playerhealth = player.getHealth();
