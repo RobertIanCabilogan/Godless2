@@ -132,7 +132,7 @@ public class GameScene implements Screen{
         if (GameData.isPaused){
             return;
         }
-        enemySpawner.update(delta);
+        enemySpawner.update(delta, enemies);
         if(GameData.Player_Death && !finalDeath){
             delay -= delta;
             if (delay <= 0){
@@ -221,15 +221,31 @@ public class GameScene implements Screen{
         spriteBatch.end();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.circle(character.getGun().getLastBulletSpawn().x, character.getGun().getLastBulletSpawn().y, 5);
         shapeRenderer.end();
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Use Line for outlines
         for (Enemy enemy : enemies) {
             enemy.renderHurtbox(shapeRenderer);
+            enemy.renderHitbox(shapeRenderer);
         }
         shapeRenderer.end();
 
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        for (Bullet bullet : bullet) {
+            bullet.renderHitbox(shapeRenderer);
+        }
+        shapeRenderer.end();
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GREEN); // Use a distinct color for the player
+        shapeRenderer.rect(
+            character.getHurtbox().x,
+            character.getHurtbox().y,
+            character.getHurtbox().width,
+            character.getHurtbox().height
+        );
+        shapeRenderer.end();
 
         stage.act(delta);
         stage.draw();

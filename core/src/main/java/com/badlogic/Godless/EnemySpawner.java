@@ -15,10 +15,12 @@ public class EnemySpawner {
     private int enemiesPerSpawn = 1;
     private float timeElapsed = 0f;
     private float nextTimeThreshold = 15f;
+
     public EnemySpawner(OrthographicCamera camera, Character target) {
         this.camera = camera;
         this.target = target;
     }
+
     public Enemy spawn() {
         float buffer = 100f; // Distance outside the screen to spawn from
         float spawnX = 0f, spawnY = 0f;
@@ -58,19 +60,19 @@ public class EnemySpawner {
         }
         return newEnemies;
     }
-    public void update(float delta) {
+
+    public void update(float delta, ArrayList<Enemy> enemies) {
         if (GameData.Player_Death) return;
         if (GameData.isPaused) return;
         timeElapsed += delta;
         if (timeElapsed >= nextTimeThreshold) {
             enemiesPerSpawn += 1;
             nextTimeThreshold += 15f;
-
-            System.out.println("Survived 30s! Enemies per spawn: " + enemiesPerSpawn);
+            for (Enemy e : enemies) {
+                e.Health += 15;
+                System.out.println("Survived 30s! Enemies per spawn: " + enemiesPerSpawn);
+            }
         }
     }
-
-
-
 }
 

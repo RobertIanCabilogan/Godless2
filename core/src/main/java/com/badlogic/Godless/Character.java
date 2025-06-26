@@ -21,6 +21,8 @@ public class Character {
     private TextureRegion[] animationFrames;
     public TextureRegion idle;
     private Animation<TextureRegion> walkanimation;
+    float offsetX = 38f;
+    float offsetY = 25f;
     //Movement
     private Vector2 position;
     //Stats
@@ -37,6 +39,8 @@ public class Character {
     private Gun gun;
     //Audio
     private Sound hurt;
+    //Level Up System
+    private int KillThreshhold = 5;
 
     public Character(float x, float y, OrthographicCamera camera){
         // Load textures
@@ -65,8 +69,11 @@ public class Character {
         hurt = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Hurt.mp3"));
         //position & logic
         position = new Vector2(x, y);
-        timer = new Timer();
-        hurtbox = new Rectangle(position.x, position.y, texture.getWidth(), texture.getHeight());
+        float hurtboxWidth = 25f;
+        float hurtboxHeight = 42f;
+
+        // Create hurtbox with offsets
+        hurtbox = new Rectangle(position.x + offsetX, position.y + offsetY, hurtboxWidth, hurtboxHeight);
         gun = new Gun(camera);
     }
 
@@ -94,18 +101,20 @@ public class Character {
                 damCooldown = 1f;
             }
         }
+        float OffsetX = 45f;
+        float OffsetY = 45f;
         Vector2 playerCenter = new Vector2(
-            position.x + idle.getRegionWidth() * 0.5f,
-            position.y + idle.getRegionHeight() * 0.5f
+            position.x + OffsetX,
+            position.y + OffsetY
         );
         gun.update(playerCenter, delta);
 
+        if (GameData.kills >= KillThreshhold){
+            KillThreshhold = (int)Math.ceil(KillThreshhold * 1.5f);
+        }
         gun.shoot();
-
-
         Movement();
-        float offsetX = 10f;
-        float offsetY = 5f;
+
         hurtbox.setPosition(position.x + offsetX, position.y + offsetY);
     }
 
@@ -147,14 +156,9 @@ public class Character {
         if (isFlipped) {
             batch.draw(currentframe, position.x + currentframe.getRegionWidth() * size, position.y,
                 -currentframe.getRegionWidth() * size, currentframe.getRegionHeight() * size);
-
-            // Adjust hurtbox correctly to stay in sync with flipped sprite
-            hurtbox.setPosition(position.x + currentframe.getRegionWidth() - hurtbox.width, position.y);
         } else {
             batch.draw(currentframe, position.x, position.y,
                 currentframe.getRegionWidth() * size, currentframe.getRegionHeight() * size);
-
-            hurtbox.setPosition(position.x, position.y);
         }
         gun.render(batch);
     }
@@ -174,5 +178,8 @@ public class Character {
 
     public void reset() {
         health = 3;
+    }
+    public Rectangle getHurtbox() {
+        return hurtbox;
     }
 }
