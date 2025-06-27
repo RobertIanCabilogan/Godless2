@@ -12,66 +12,78 @@ import com.badlogic.gdx.math.Rectangle;
 import java.util.ArrayList;
 
 public class Bullet {
+    // Core texture and movement
     private Texture bullet;
     private Vector2 position;
     private Vector2 velocity;
-    private float Speed = 1000f;
-    private Polygon hitbox;
-    public float timer = 2f;
-    private int damage = 10;
-    private float size = 0.5f;
-    public boolean shouldRemove = false;
+    private float speed = 1000f;
     private float angle;
-    private final Vector2 hitboxVisualOffset = new Vector2(15f, 12f);
 
-    public Bullet(Vector2 startpos, Vector2 direction, float gunAngle) {
+    // Visual and collision
+    private float size = 0.5f;
+    private final Vector2 hitboxVisualOffset = new Vector2(15f, 12f);
+    private Polygon hitbox;
+
+    // Bullet logic
+    private float timer = 2f;
+    private int damage = 10;
+    public boolean shouldRemove = false;
+
+    public Bullet(Vector2 startPos, Vector2 direction, float gunAngle) {
         bullet = new Texture("Sprites/Projectiles/Light Bullet.png");
-        position = new Vector2(startpos);
-        velocity = new Vector2(direction).scl(Speed);
+
+        position = new Vector2(startPos);
+        velocity = new Vector2(direction).scl(speed);
         this.angle = gunAngle;
 
-        float Width = 15f;
-        float Height = 10f;
+        float width = 15f;
+        float height = 10f;
 
-        // Define hitbox centered around (0,0)
+        // Define centered rectangular hitbox
         float[] vertices = {
-            -Width / 2f, -Height / 2f,
-            Width / 2f, -Height / 2f,
-            Width / 2f,  Height / 2f,
-            -Width / 2f,  Height / 2f
+            -width / 2f, -height / 2f,
+            width / 2f, -height / 2f,
+            width / 2f,  height / 2f,
+            -width / 2f,  height / 2f
         };
 
         hitbox = new Polygon(vertices);
-        hitbox.setOrigin(0, 0);  // Vertices already centered, origin stays at (0,0)
+        hitbox.setOrigin(0, 0); // Already centered
         Vector2 rotatedOffset = new Vector2(hitboxVisualOffset).rotateDeg(angle);
         hitbox.setPosition(position.x + rotatedOffset.x, position.y + rotatedOffset.y);
         hitbox.setRotation(angle);
     }
 
-    public void update(float delta, ArrayList<Enemy> enemies){
+    public void update(float delta, ArrayList<Enemy> enemies) {
+        // Move bullet
         position.add(velocity.x * delta, velocity.y * delta);
+
+        // Update hitbox
         Vector2 rotatedOffset = new Vector2(hitboxVisualOffset).rotateDeg(angle);
         hitbox.setPosition(position.x + rotatedOffset.x, position.y + rotatedOffset.y);
         hitbox.setRotation(angle);
 
+        // Timer expiration
         timer -= delta;
-
-        if (timer<= 0){
+        if (timer <= 0) {
             shouldRemove = true;
         }
-        for (Enemy enemy: enemies){
+
+        // Collision detection
+        for (Enemy enemy : enemies) {
             if (Intersector.overlapConvexPolygons(hitbox, enemy.getHurtbox())) {
                 enemy.takeDamage(damage);
-                System.out.println(enemy.Health);
+                System.out.println(enemy.Health); // Debugging output
                 shouldRemove = true;
                 break;
             }
         }
     }
+
     public void render(SpriteBatch batch) {
         if (bullet == null) {
             System.out.println("Skipping rendering: Bullet texture is null!");
-            return; // Prevent crashes by skipping rendering
+            return;
         }
 
         Vector2 rotatedOffset = new Vector2(hitboxVisualOffset).rotateDeg(angle);
@@ -80,11 +92,14 @@ public class Bullet {
 
         batch.draw(
             bullet,
-            position.x + rotatedOffset.x - drawWidth / 2f, position.y + rotatedOffset.y - drawHeight / 2f,
-            drawWidth / 2f, drawHeight / 2f,
+            position.x + rotatedOffset.x - drawWidth / 2f,
+            position.y + rotatedOffset.y - drawHeight / 2f,
+            drawWidth / 2f, drawHeight / 2f, // Origin
             drawWidth, drawHeight,
-            1, 1, angle,
-            0, 0, bullet.getWidth(), bullet.getHeight(),
+            1, 1, // Scale
+            angle,
+            0, 0,
+            bullet.getWidth(), bullet.getHeight(),
             false, false
         );
     }
@@ -93,7 +108,6 @@ public class Bullet {
         shapeRenderer.setColor(Color.GREEN);
         shapeRenderer.polygon(hitbox.getTransformedVertices());
     }
-
 
     public void dispose() {
         if (bullet != null) {

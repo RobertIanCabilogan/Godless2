@@ -15,8 +15,8 @@ import java.util.ArrayList;
 public class Enemy {
     // === Graphics & Animation ===
     private Texture enemtexture;
-    private TextureRegion[] animationframes;
-    private Animation<TextureRegion> walkinganimation;
+    private TextureRegion[] animationFrames;
+    private Animation<TextureRegion> walkingAnimation;
 
     // === Positioning & Collision ===
     private Vector2 position;
@@ -29,89 +29,90 @@ public class Enemy {
 
     // === Stats ===
     public int Health = 30;
-    private float Speed = 175f;
-    private int damage = 1;
-    private float size = 2f;
+    private final float Speed = 175f;
+    private final int damage = 1;
+    private final float size = 2f;
 
     // === State Flags ===
-    private float elapsedtime = 0f;
-    private boolean isflipped = false;
+    private float elapsedTime = 0f;
+    private boolean isFlipped = false;
     public boolean isDead = false;
-    private float dissapearTime = 6f;
     public boolean dissapear = false;
-    private int healthThreshhold = 15;
+    private float dissapearTime = 6f;
+    private final int healthThreshold = 15;
 
-    private float Offsetx = 19f;
-    private float Offsety = 10f;
+    private final float OffsetX = 19f;
+    private final float OffsetY = 10f;
 
     // === Constructor ===
     public Enemy(float x, float y, Character player) {
         this.player = player;
         enemtexture = new Texture("Sprites/Enemy/BasicMonster.png");
 
-        // Walking animation setup (left untouched)
-        int row = 1;
-        int col = 5;
-        int frameWidth = enemtexture.getWidth() / col;
-        int frameHeight = enemtexture.getHeight() / row;
+        // Walking animation setup
+        int rows = 1;
+        int cols = 5;
+        int frameWidth = enemtexture.getWidth() / cols;
+        int frameHeight = enemtexture.getHeight() / rows;
+
         TextureRegion[][] temp = TextureRegion.split(enemtexture, frameWidth, frameHeight);
-        animationframes = new TextureRegion[3];
-        animationframes[0] = temp[0][0];
-        animationframes[1] = temp[0][1];
-        animationframes[2] = temp[0][2];
-        walkinganimation = new Animation<>(0.1f, animationframes);
-        walkinganimation.setPlayMode(Animation.PlayMode.LOOP);
+        animationFrames = new TextureRegion[3];
+        for (int i = 0; i < 3; i++) animationFrames[i] = temp[0][i];
 
-        // Position
+        walkingAnimation = new Animation<>(0.1f, animationFrames);
+        walkingAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+        // Position and Hitboxes
         position = new Vector2(x, y);
-        float Width = 29f;
-        float Height = 42f;
+        float width = 29f;
+        float height = 42f;
 
-        // Hitbox & Collision
         float[] vertices = {
-            0, 0,            // bottom-left
-            Width, 0,        // bottom-right
-            Width, Height,   // top-right
-            0, Height        // top-left
+            0, 0,
+            width + 15, 0,
+            width + 15, height + 15,
+            0, height + 15
         };
 
         hurtbox = new Polygon(vertices);
-        hurtbox.setPosition(position.x + Offsetx, position.y + Offsety);
-        hitbox = new Rectangle(position.x + Offsetx, position.y + Offsety, Width, Height);
-        collision = new Rectangle(position.x + Offsetx, position.y + Offsety, Width, Height);
+        hurtbox.setPosition(position.x + OffsetX, position.y + OffsetY);
+
+        hitbox = new Rectangle(position.x + OffsetX, position.y + OffsetY, width, height);
+        collision = new Rectangle(position.x + OffsetX, position.y + OffsetY, width, height);
     }
 
     // === Update ===
     public void update(float delta, ArrayList<Enemy> enemies) {
         if (GameData.isPaused || dissapear) return;
 
-        elapsedtime += delta;
+        elapsedTime += delta;
+
         if (GameData.Player_Death) {
             dissapearTime -= delta;
             if (dissapearTime <= 0) dissapear = true;
         }
 
         if (!GameData.Player_Death) {
+            Vector2 direction;
             if (!GameData.Player_Flee) {
                 // Chase player
-                Vector2 direction = new Vector2(player.getPosition()).sub(position).nor();
-                position.add(direction.x * Speed * delta, direction.y * Speed * delta);
-                isflipped = player.getPosition().x < position.x;
+                direction = new Vector2(player.getPosition()).sub(position).nor();
+                isFlipped = player.getPosition().x < position.x;
             } else {
                 // Flee from player
-                Vector2 fleeDirection = new Vector2(position).sub(player.getPosition()).nor();
-                position.add(fleeDirection.x * Speed * delta, fleeDirection.y * Speed * delta);
-                isflipped = player.getPosition().x > position.x;
+                direction = new Vector2(position).sub(player.getPosition()).nor();
+                isFlipped = player.getPosition().x > position.x;
             }
+            position.add(direction.x * Speed * delta, direction.y * Speed * delta);
         } else {
-            // Player dead: reset flee & run once
+            // Player dead: flee and stop logic
             GameData.Player_Flee = false;
-            Vector2 fleeDirection = new Vector2(position).sub(player.getPosition()).nor();
-            position.add(fleeDirection.x * Speed * delta, fleeDirection.y * Speed * delta);
-            isflipped = player.getPosition().x > position.x;
+            Vector2 direction = new Vector2(position).sub(player.getPosition()).nor();
+            position.add(direction.x * Speed * delta, direction.y * Speed * delta);
+            isFlipped = player.getPosition().x > position.x;
         }
 
-        // Avoid other enemies
+        // Avoid overlapping with other enemies
         for (Enemy other : enemies) {
             if (other != this && collision.overlaps(other.collision)) {
                 Vector2 separation = new Vector2(position).sub(other.position).nor();
@@ -120,25 +121,28 @@ public class Enemy {
         }
 
         // Update hitboxes
-        hurtbox.setPosition(position.x + Offsetx, position.y + Offsety);
-        collision.setPosition(position.x + Offsetx, position.y + Offsety);
-        hitbox.setPosition(position.x + Offsetx, position.y + Offsety);
+        hurtbox.setPosition(position.x + OffsetX, position.y + OffsetY);
+        collision.setPosition(position.x + OffsetX, position.y + OffsetY);
+        hitbox.setPosition(position.x + OffsetX, position.y + OffsetY);
     }
 
     // === Render ===
     public void render(SpriteBatch batch) {
-        TextureRegion currentframe = walkinganimation.getKeyFrame(elapsedtime, true);
-        if (!isflipped) {
+        TextureRegion currentFrame = walkingAnimation.getKeyFrame(elapsedTime, true);
+        float frameWidth = currentFrame.getRegionWidth() * size;
+        float frameHeight = currentFrame.getRegionHeight() * size;
+
+        if (!isFlipped) {
             batch.draw(
-                currentframe,
-                position.x + currentframe.getRegionWidth() * size, position.y,
-                -currentframe.getRegionWidth() * size, currentframe.getRegionHeight() * size
+                currentFrame,
+                position.x + frameWidth, position.y,
+                -frameWidth, frameHeight
             );
         } else {
             batch.draw(
-                currentframe,
+                currentFrame,
                 position.x, position.y,
-                currentframe.getRegionWidth() * size, currentframe.getRegionHeight() * size
+                frameWidth, frameHeight
             );
         }
     }
@@ -147,6 +151,7 @@ public class Enemy {
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.polygon(hurtbox.getTransformedVertices());
     }
+
     public void renderHitbox(ShapeRenderer shapeRenderer) {
         shapeRenderer.setColor(Color.GREEN);
         shapeRenderer.rect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);

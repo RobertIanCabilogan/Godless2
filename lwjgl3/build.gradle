@@ -2,6 +2,7 @@
 buildscript {
   repositories {
     gradlePluginPortal()
+    mavenCentral()
   }
   dependencies {
     classpath "io.github.fourlastor:construo:1.7.1"
@@ -34,6 +35,7 @@ dependencies {
   implementation "de.tomgrill.gdxdialogs:gdx-dialogs-desktop:$dialogsVersion"
   implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   implementation project(':core')
+
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"
 

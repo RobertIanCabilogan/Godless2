@@ -69,7 +69,6 @@ public class Gun {
         frameWidth = frameW;
         frameHeight = frameH;
     }
-
     public void update(Vector2 playerCenter, float delta) {
         this.position.set(playerCenter);
 
@@ -107,7 +106,6 @@ public class Gun {
             }
         }
     }
-
     public void render(SpriteBatch batch) {
         Vector2 mousePosition = new Vector2(Gdx.input.getX(), Gdx.input.getY());
         Vector3 worldcoords = camera.unproject(new Vector3(mousePosition.x, mousePosition.y, 0));
@@ -129,7 +127,6 @@ public class Gun {
             angle
         );
     }
-
     public void shoot() {
         if (isreloading) return;
 
@@ -173,26 +170,35 @@ public class Gun {
 
             isShooting = true;
             shootAnimTimer = 0f;
-            gunshot.play(0.8f);
+            gunshot.play(0.3f);
         } else if (Ammo == 0 && !isreloading) {
             reload.play(2f);
             isreloading = true;
             reloadtime = reloadDuration;
         }
     }
-
-
     public void renderBullets(SpriteBatch batch) {
         for (Bullet b : bullets) {
             b.render(batch);
         }
     }
-
     public Vector2 getLastBulletSpawn() {
         return lastBulletSpawn;
     }
-
     public ArrayList<Bullet> getBullets() {
         return bullets;
+    }
+    public void applyUpgrade(UpgradeTypes upgrade){
+        switch (upgrade){
+            case EXTRA_BULLETS:
+                maxAmmo += 1;
+                Ammo = maxAmmo;
+                break;
+            case EXTRA_PROJECTILES:
+                AddBullet += 1;
+                maxAmmo -= 2;
+                RandRange += 1.5f;
+                break;
+        }
     }
 }

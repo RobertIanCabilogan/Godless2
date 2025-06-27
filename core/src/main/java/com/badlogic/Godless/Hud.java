@@ -41,12 +41,7 @@ public class Hud {
         font.getData().setScale(2f);
         largeFont = new BitmapFont();
         largeFont.getData().setScale(3f);
-        if (camera == null){
-            System.out.println("No Camera");
-        }
-        else{
-            this.camera = camera;
-        }
+        this.camera = camera;
         healthyTexture = new Texture("Sprites/UI/Healthy.png");
         injuredTexture = new Texture("Sprites/UI/Injured.png");
         graveTexture = new Texture("Sprites/UI/Wounded.png");

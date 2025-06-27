@@ -5,6 +5,9 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -24,181 +27,220 @@ import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
 
-public class GameScene implements Screen{
-    //Core rendering
+public class GameScene implements Screen {
+
+    // Core rendering
     private Game game;
     private Screen gameScreen;
     private OrthographicCamera camera;
     private SpriteBatch spriteBatch;
     private ShapeRenderer shapeRenderer;
     private Stage stage;
-    //The Textures
+
+    // Assets and audio
     private Texture groundtexture, retryButtonTex, menuButtonTex, youDiedTex;
     private TextureRegion groundregion;
-    private float scrollx = 0;
     private Sprite deathTex;
-    //Actors
+    public Music BGMusic;
+    private Sound lvlUp, bgMusic;
+
+    // UI and Fonts
+    private BitmapFont font;
+    private Hud hud;
+    private UpgradeMenu upgradeMenu;
+    private ImageButton retryButton, menuButton;
+
+    // Game logic
     private Character character;
     private ArrayList<Enemy> enemies;
     private ArrayList<Bullet> bullet;
     public EnemySpawner enemySpawner;
-    //UI
-    private Hud hud;
-    private BitmapFont font;
+
+    // Timers and flags
+    private float scrollx = 0;
     private float timeElapsed = 0;
-    private ImageButton retryButton, menuButton;
-    //Logic
     private float spawnTimer = 2;
     private float delay = 2.5f;
+    private float texDelay = 2f;
+    private float upDelay = 1.6f;
     private boolean finalDeath = false;
     private boolean showButtons = false;
-    public GameScene(Game game){
+    private boolean UpTrigger = false;
+    private boolean showDeathTex = false;
+    private int NextKillThreshold = 10;
+
+    public GameScene(Game game) {
         // Reset shared state
         GameData.Player_Death = false;
         GameData.kills = 0;
 
-        // Clear and reinitialize everything
+        // Initialize collections and systems
+        this.game = game;
         enemies = new ArrayList<>();
         bullet = new ArrayList<>();
+        font = new BitmapFont();
+        font.getData().setScale(2f);
 
-        camera = new OrthographicCamera(); // Or reuse if already created
+        camera = new OrthographicCamera();
         character = new Character(100, 100, camera);
         enemySpawner = new EnemySpawner(camera, character);
         hud = new Hud(character, camera);
-
-        spawnTimer = 2f;
-        finalDeath = false;
-        delay = 2f;
-
-
-        this.game = game;
-        font = new BitmapFont();
-        font.getData().setScale(2f);
-        bullet = new ArrayList<Bullet>();
     }
 
-    private void togglePause(){
+    private void togglePause() {
         GameData.isPaused = !GameData.isPaused;
+        BGMusic.setVolume(GameData.isPaused ? 0.2f : 0.5f);
     }
+
     @Override
-    public void show(){
-        enemySpawner = new EnemySpawner(camera, character);
+    public void show() {
+        UpgradeAssets.load();
         shapeRenderer = new ShapeRenderer();
         spriteBatch = new SpriteBatch();
         stage = new Stage(new ScreenViewport());
 
+        // Load textures
         groundtexture = new Texture("Sprites/World/Ground_1.jpg");
         groundtexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        groundregion = new TextureRegion(groundtexture);
+        groundregion.setRegion(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         retryButtonTex = new Texture("Sprites/UI/Retry_Button.png");
         menuButtonTex = new Texture("Sprites/UI/Menu_Button.png");
-        youDiedTex = new Texture("Sprites/UI/Death_Screen.png");
+        youDiedTex = new Texture("Sprites/UI/Death.png");
+        deathTex = new Sprite(youDiedTex);
 
+        // Audio setup
+        lvlUp = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Level_Up.mp3"));
+        BGMusic = Gdx.audio.newMusic(Gdx.files.internal("Audio/SFX/BGM.mp3"));
+        BGMusic.setLooping(true);
+        BGMusic.setVolume(0.5f);
+        BGMusic.play();
+
+        // Setup buttons
         retryButton = new ImageButton(new TextureRegionDrawable(retryButtonTex));
         menuButton = new ImageButton(new TextureRegionDrawable(menuButtonTex));
-
         retryButton.setPosition(150, 150);
         menuButton.setPosition(1000, 150);
-
         retryButton.setVisible(false);
         menuButton.setVisible(false);
-
+        retryButton.setTouchable(Touchable.disabled);
+        menuButton.setTouchable(Touchable.disabled);
         stage.addActor(retryButton);
         stage.addActor(menuButton);
 
-        retryButton.addListener(new ClickListener(){
+        retryButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y){
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new GameScene(game));
             }
         });
 
-        menuButton.addListener(new ClickListener(){
+        menuButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y){
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new FirstScreen(game));
             }
         });
-        retryButton.setTouchable(Touchable.disabled);
-        menuButton.setTouchable(Touchable.disabled);
-
-        groundregion = new TextureRegion(groundtexture);
-        groundregion.setRegion(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.input.setInputProcessor(stage);
+
+        // Upgrade Menu
+        upgradeMenu = new UpgradeMenu(camera, new UpgradeSystem(character, character.getGun()));
+        stage.addActor(upgradeMenu);
     }
-    public void update(float delta){
-        if (GameData.isPaused){
-            return;
-        }
+
+    public void update(float delta) {
         enemySpawner.update(delta, enemies);
-        if(GameData.Player_Death && !finalDeath){
-            delay -= delta;
-            if (delay <= 0){
-                finalDeath = true;
-                String name = JOptionPane.showInputDialog(null, "Enter Your Name:", "Death", JOptionPane.PLAIN_MESSAGE);
-                if (name == null || name.trim().isEmpty()) name = "[REDACTED]";
+        BGMusic.setVolume(GameData.charLvlUp ? 0.2f : 0.6f);
 
-                int kills = GameData.kills;
-                float time = hud.gettimeElapsed();
-
-                List<PlayerStats> leaderboard = LeaderboardUtil.loadLeaderboard();
-                leaderboard.add(new PlayerStats(name, kills, time));
-                LeaderboardUtil.saveLeaderboard(leaderboard);
-                new Leaderboard(leaderboard);
-
-                retryButton.setVisible(true);
-                retryButton.setTouchable(Touchable.enabled);
-                menuButton.setVisible(true);
-                menuButton.setTouchable(Touchable.enabled);
-
+        if (GameData.kills >= NextKillThreshold) {
+            if (!UpTrigger) {
+                lvlUp.play(0.6f);
+                UpTrigger = true;
+            }
+            upDelay -= delta;
+            if (upDelay <= 0) {
+                GameData.charLvlUp = true;
+                NextKillThreshold = (int) Math.ceil(NextKillThreshold * 1.7);
+                GameData.isPaused = true;
+                upgradeMenu.setVisible(true);
+                upDelay = 1.6f;
+                UpTrigger = false;
             }
         }
-        if (!GameData.Player_Death && spawnTimer <= 0) {
-            enemies.addAll(enemySpawner.spawnWave());
-            spawnTimer = 2f;
-        } else {
-            spawnTimer -= delta;
+
+        if (GameData.isPaused) return;
+
+        if (GameData.Player_Death && !finalDeath) {
+            texDelay -= delta;
+            if (texDelay <= 0) showDeathTex = true;
+            if (showDeathTex) {
+                delay -= delta;
+                if (delay <= 0) {
+                    finalDeath = true;
+                    String name = JOptionPane.showInputDialog(null, "Enter Your Name:", "Death", JOptionPane.PLAIN_MESSAGE);
+                    if (name == null || name.trim().isEmpty()) name = "[REDACTED]";
+                    List<PlayerStats> leaderboard = LeaderboardUtil.loadLeaderboard();
+                    leaderboard.add(new PlayerStats(name, GameData.kills, hud.gettimeElapsed()));
+                    LeaderboardUtil.saveLeaderboard(leaderboard);
+                    new Leaderboard(leaderboard);
+
+                    retryButton.setVisible(true);
+                    menuButton.setVisible(true);
+                    retryButton.setTouchable(Touchable.enabled);
+                    menuButton.setTouchable(Touchable.enabled);
+                    BGMusic.dispose();
+                }
+            }
         }
 
-        // this is for game updates.
-        enemies.removeIf(enemy -> enemy.isDead || enemy.dissapear);
-        bullet.removeIf(b -> b.shouldRemove);
-        for (Bullet bullet : bullet) {
-            bullet.update(delta, enemies);
+        if (!GameData.Player_Death) {
+            if (spawnTimer <= 0) {
+                enemies.addAll(enemySpawner.spawnWave());
+                spawnTimer = 2f;
+            } else {
+                spawnTimer -= delta;
+            }
         }
+
+        enemies.removeIf(e -> e.isDead || e.dissapear);
+        bullet.removeIf(b -> b.shouldRemove);
+
+        for (Bullet b : bullet) b.update(delta, enemies);
         bullet.addAll(character.getGun().getBullets());
         character.getGun().getBullets().clear();
     }
 
     @Override
-    public void render(float delta){
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+    public void render(float delta) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !GameData.charLvlUp) {
             togglePause();
         }
+
         update(delta);
         character.update(delta, enemies);
-
         hud.update(delta);
         timeElapsed += delta;
-        for (Enemy enemy : enemies){
-            enemy.update(delta, enemies);
-        }
+
+        for (Enemy enemy : enemies) enemy.update(delta, enemies);
 
         int minutes = (int) (timeElapsed / 60);
         int seconds = (int) (timeElapsed % 60);
         String time = String.format("%02d:%02d", minutes, seconds);
 
-        camera.position.set(character.getPosition().x + character.texture.getWidth() * character.size / 2,
-            character.getPosition().y + character.texture.getHeight() * character.size / 2, 0);
+        camera.position.set(
+            character.getPosition().x + character.texture.getWidth() * character.size / 2,
+            character.getPosition().y + character.texture.getHeight() * character.size / 2,
+            0
+        );
         camera.update();
 
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
 
         int tileSize = groundtexture.getWidth();
-
         float startX = ((int) (camera.position.x / tileSize)) * tileSize - Gdx.graphics.getWidth();
         float startY = ((int) (camera.position.y / tileSize)) * tileSize - Gdx.graphics.getHeight();
 
@@ -207,71 +249,61 @@ public class GameScene implements Screen{
                 spriteBatch.draw(groundtexture, x, y, tileSize, tileSize);
             }
         }
-        //character
+
         character.render(spriteBatch);
         character.getGun().renderBullets(spriteBatch);
-        for (Enemy enemy : enemies){
-            enemy. render(spriteBatch);
+        for (Enemy e : enemies) e.render(spriteBatch);
+        for (Bullet b : bullet) b.render(spriteBatch);
+        hud.render(spriteBatch);
+        spriteBatch.end();
+
+        if (GameData.Player_Death && showDeathTex) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0, 0, 0, 0.6f);
+            shapeRenderer.rect(
+                camera.position.x - camera.viewportWidth / 2f,
+                camera.position.y - camera.viewportHeight / 2f,
+                camera.viewportWidth,
+                camera.viewportHeight
+            );
+            shapeRenderer.end();
         }
 
-        hud.render(spriteBatch);
-        for (Bullet b : bullet) {
-            b.render(spriteBatch);
+        spriteBatch.begin();
+        if (showDeathTex) {
+            float x = camera.position.x - deathTex.getWidth() / 2f;
+            float y = camera.position.y - deathTex.getHeight() / 2f;
+            deathTex.setPosition(x, y);
+            deathTex.draw(spriteBatch);
         }
         spriteBatch.end();
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.YELLOW);
-        shapeRenderer.circle(character.getGun().getLastBulletSpawn().x, character.getGun().getLastBulletSpawn().y, 5);
-        shapeRenderer.end();
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line); // Use Line for outlines
-        for (Enemy enemy : enemies) {
-            enemy.renderHurtbox(shapeRenderer);
-            enemy.renderHitbox(shapeRenderer);
-        }
-        shapeRenderer.end();
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        for (Bullet bullet : bullet) {
-            bullet.renderHitbox(shapeRenderer);
-        }
-        shapeRenderer.end();
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.GREEN); // Use a distinct color for the player
-        shapeRenderer.rect(
-            character.getHurtbox().x,
-            character.getHurtbox().y,
-            character.getHurtbox().width,
-            character.getHurtbox().height
-        );
-        shapeRenderer.end();
 
         stage.act(delta);
         stage.draw();
     }
-    // this is for drawing enemies
+
     @Override
-    public void resize(int width, int height){
+    public void resize(int width, int height) {
         camera.setToOrtho(false, width, height);
         stage.getViewport().update(width, height, true);
         hud.resize(width, height);
         retryButton.setPosition(Gdx.graphics.getWidth() * 0.15f, Gdx.graphics.getHeight() * 0.15f);
-        menuButton.setPosition(Gdx.graphics.getWidth() * 0.85f - menuButton.getWidth(), Gdx.graphics.getHeight() * 0.15f);
+        menuButton.setPosition(
+            Gdx.graphics.getWidth() * 0.85f - menuButton.getWidth(),
+            Gdx.graphics.getHeight() * 0.15f
+        );
+        upgradeMenu.centerOnCamera(camera);
     }
 
-    @Override
-    public void pause(){
-    }
-    @Override
-    public void resume(){
-    }
-    @Override
-    public void hide(){
-    }
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
 
     @Override
-    public void dispose(){
+    public void dispose() {
+        BGMusic.dispose();
         shapeRenderer.dispose();
         font.dispose();
         spriteBatch.dispose();
@@ -279,3 +311,4 @@ public class GameScene implements Screen{
         character.dispose();
     }
 }
+

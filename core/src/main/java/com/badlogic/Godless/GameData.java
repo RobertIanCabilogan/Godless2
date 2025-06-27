@@ -6,4 +6,5 @@ public class GameData {
     public static  int kills = 0;
     public static boolean gameLoop = true;
     public static boolean isPaused = false;
+    public static boolean charLvlUp = false;
 }
