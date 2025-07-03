@@ -7,4 +7,5 @@ public class GameData {
     public static boolean gameLoop = true;
     public static boolean isPaused = false;
     public static boolean charLvlUp = false;
+    public static boolean StartupScene = true;
 }

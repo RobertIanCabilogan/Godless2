@@ -1,5 +1,6 @@
 package com.badlogic.Godless;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -9,14 +10,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-
+import com.badlogic.gdx.audio.Sound;
 import java.util.ArrayList;
 
 public class Enemy {
-    // === Graphics & Animation ===
+    // === Graphics, Animation & Sound ===
     private Texture enemtexture;
     private TextureRegion[] animationFrames;
     private Animation<TextureRegion> walkingAnimation;
+    private Sound Death, Hit;
 
     // === Positioning & Collision ===
     private Vector2 position;
@@ -48,7 +50,8 @@ public class Enemy {
     public Enemy(float x, float y, Character player) {
         this.player = player;
         enemtexture = new Texture("Sprites/Enemy/BasicMonster.png");
-
+        Death = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Enem_Death.mp3"));
+        Hit = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Enem_Hit.mp3"));
         // Walking animation setup
         int rows = 1;
         int cols = 5;
@@ -169,9 +172,11 @@ public class Enemy {
     // === Combat ===
     public void takeDamage(int amount) {
         Health -= amount;
+        Hit.play(0.5f);
         if (Health <= 0) {
             isDead = true;
             GameData.kills += 1;
+            Death.play(0.5f);
         }
     }
 }

@@ -7,8 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -19,10 +18,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.Color;
+
 import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -43,6 +41,8 @@ public class GameScene implements Screen {
     private Sprite deathTex;
     public Music BGMusic;
     private Sound lvlUp, bgMusic;
+    private Pixmap pixmap;
+    private Cursor customCursor;
 
     // UI and Fonts
     private BitmapFont font;
@@ -104,10 +104,10 @@ public class GameScene implements Screen {
         groundtexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         groundregion = new TextureRegion(groundtexture);
         groundregion.setRegion(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         retryButtonTex = new Texture("Sprites/UI/Retry_Button.png");
         menuButtonTex = new Texture("Sprites/UI/Menu_Button.png");
         youDiedTex = new Texture("Sprites/UI/Death.png");
+        pixmap = new Pixmap(Gdx.files.internal("Sprites/UI/ShootingIcon.png"));
         deathTex = new Sprite(youDiedTex);
 
         // Audio setup
@@ -149,6 +149,10 @@ public class GameScene implements Screen {
         // Upgrade Menu
         upgradeMenu = new UpgradeMenu(camera, new UpgradeSystem(character, character.getGun()));
         stage.addActor(upgradeMenu);
+
+        // Custom Crosshair
+        customCursor = Gdx.graphics.newCursor(pixmap, 30, 0);
+        Gdx.graphics.setCursor(customCursor);
     }
 
     public void update(float delta) {
@@ -192,6 +196,7 @@ public class GameScene implements Screen {
                     retryButton.setTouchable(Touchable.enabled);
                     menuButton.setTouchable(Touchable.enabled);
                     BGMusic.dispose();
+                    customCursor.dispose();
                 }
             }
         }
@@ -303,6 +308,7 @@ public class GameScene implements Screen {
 
     @Override
     public void dispose() {
+        customCursor.dispose();
         BGMusic.dispose();
         shapeRenderer.dispose();
         font.dispose();
