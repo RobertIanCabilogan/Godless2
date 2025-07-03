@@ -222,7 +222,7 @@ public class GameScene implements Screen {
 
     @Override
     public void render(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !GameData.charLvlUp) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && !GameData.charLvlUp && !GameData.Player_Death) {
             togglePause();
         }
 
@@ -277,6 +277,20 @@ public class GameScene implements Screen {
             );
             shapeRenderer.end();
         }
+        if (GameData.isPaused && !GameData.Player_Death) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0, 0, 0, 0.5f);
+            shapeRenderer.rect(
+                camera.position.x - camera.viewportWidth / 2f,
+                camera.position.y - camera.viewportHeight / 2f,
+                camera.viewportWidth,
+                camera.viewportHeight
+            );
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+        }
 
         spriteBatch.begin();
         if (showDeathTex) {
@@ -285,6 +299,7 @@ public class GameScene implements Screen {
             deathTex.setPosition(x, y);
             deathTex.draw(spriteBatch);
         }
+
         spriteBatch.end();
 
         stage.act(delta);
