@@ -123,6 +123,7 @@ public class FirstScreen implements Screen {
         stage.addActor(quitbutton);
         stage.addActor(leaderboardButton);
         stage.addActor(creditsButton);
+
         // SKULL :)
         TextureRegion[][] tmp = TextureRegion.split(gifSheet, gifSheet.getWidth() / 12, gifSheet.getHeight() / 2);
         gifFrames = new TextureRegion[24];

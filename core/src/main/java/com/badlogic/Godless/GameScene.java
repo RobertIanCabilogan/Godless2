@@ -57,7 +57,6 @@ public class GameScene implements Screen {
     public EnemySpawner enemySpawner;
 
     // Timers and flags
-    private float scrollx = 0;
     private float timeElapsed = 0;
     private float spawnTimer = 2;
     private float delay = 2.5f;
@@ -80,6 +79,7 @@ public class GameScene implements Screen {
         bullet = new ArrayList<>();
         font = new BitmapFont();
         font.getData().setScale(2f);
+        NextKillThreshold = 10;
 
         camera = new OrthographicCamera();
         character = new Character(100, 100, camera);
@@ -148,6 +148,7 @@ public class GameScene implements Screen {
 
         // Upgrade Menu
         upgradeMenu = new UpgradeMenu(camera, new UpgradeSystem(character, character.getGun()));
+        upgradeMenu.setCharacter(character);
         stage.addActor(upgradeMenu);
 
         // Custom Crosshair
@@ -163,12 +164,13 @@ public class GameScene implements Screen {
             if (!UpTrigger) {
                 lvlUp.play(0.6f);
                 UpTrigger = true;
+                GameData.UpgradeAnim = true;
             }
             upDelay -= delta;
             if (upDelay <= 0) {
                 GameData.charLvlUp = true;
-                NextKillThreshold = (int) Math.ceil(NextKillThreshold * 1.7);
                 GameData.isPaused = true;
+                NextKillThreshold = (int) Math.ceil(NextKillThreshold * 1.7);
                 upgradeMenu.setVisible(true);
                 upDelay = 1.6f;
                 UpTrigger = false;

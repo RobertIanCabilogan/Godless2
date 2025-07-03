@@ -17,11 +17,12 @@ import java.util.ArrayList;
 public class Character {
     // === Sprites & Animation ===
     public Texture texture;
-    private Texture spritesheet;
-    private TextureRegion[] animationFrames;
+    private Texture spritesheet, upgradeSheet;
+    private TextureRegion[] animationFrames, upgradeAnimFrames;
     public TextureRegion idle;
-    private Animation<TextureRegion> walkAnimation;
+    private Animation<TextureRegion> walkAnimation, upgradeAnimation;
     private float elapsedTime = 0f;
+    public float upgradeTime = 0f;
     private boolean isMoving = false;
     private boolean isFlipped = false;
 
@@ -51,6 +52,8 @@ public class Character {
         // Load textures
         texture = new Texture("Sprites/Players/WandererIdle(Updated).png");
         spritesheet = new Texture("Sprites/Players/WandererWalk (Updated).png");
+        upgradeSheet = new Texture("Sprites/UI/Upgrade_Anim.png");
+
         idle = new TextureRegion(texture);
 
         // Setup animation frames
@@ -67,6 +70,16 @@ public class Character {
 
         walkAnimation = new Animation<>(0.1f, animationFrames);
         walkAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+        // The Upgrade Animation;
+        TextureRegion[][] tmp = TextureRegion.split(upgradeSheet, upgradeSheet.getWidth() / 9, upgradeSheet.getHeight());
+        upgradeAnimFrames = new TextureRegion[9];
+        for (int col = 0; col < 9; col++) {
+            upgradeAnimFrames[col] = tmp[0][col];
+        }
+
+        upgradeAnimation = new Animation<TextureRegion>(0.19f, upgradeAnimFrames);
+        upgradeTime = 0f;
 
         // Load sounds
         hurt = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Hurt.mp3"));
@@ -180,6 +193,19 @@ public class Character {
                 drawWidth, drawHeight);
         }
 
+        if (GameData.UpgradeAnim) {
+            upgradeTime += Gdx.graphics.getDeltaTime();
+            TextureRegion currentUpgradeFrame = upgradeAnimation.getKeyFrame(upgradeTime, false);
+
+            float upgradeDrawWidth = currentUpgradeFrame.getRegionWidth() * size;
+            float upgradeDrawHeight = currentUpgradeFrame.getRegionHeight() * size;
+
+            float centerX = position.x + (drawWidth - upgradeDrawWidth) / 2f;
+            float centerY = position.y + (drawHeight - upgradeDrawHeight) / 2f;
+
+            batch.draw(currentUpgradeFrame, centerX - 5, centerY, upgradeDrawWidth, upgradeDrawHeight);
+        }
+
         gun.render(batch);
     }
 
@@ -206,6 +232,10 @@ public class Character {
 
     public Rectangle getHurtbox() {
         return hurtbox;
+    }
+
+    public void resetUpgradeTime() {
+        this.upgradeTime = 0f;
     }
 
     public void applyUpgrade(UpgradeTypes upgrade) {

@@ -172,7 +172,7 @@ public class Enemy {
     // === Combat ===
     public void takeDamage(int amount) {
         Health -= amount;
-        Hit.play(0.5f);
+        Hit.play(0.2f);
         if (Health <= 0) {
             isDead = true;
             GameData.kills += 1;

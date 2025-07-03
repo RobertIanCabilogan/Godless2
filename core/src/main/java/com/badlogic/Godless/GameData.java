@@ -8,4 +8,5 @@ public class GameData {
     public static boolean isPaused = false;
     public static boolean charLvlUp = false;
     public static boolean StartupScene = true;
+    public static boolean UpgradeAnim = false;
 }

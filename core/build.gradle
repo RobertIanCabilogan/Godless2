@@ -14,5 +14,6 @@ dependencies {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
     implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
     implementation 'com.bitfire.gdx-video:gdx-video:1.0.1'
+    implementation "com.badlogicgames.gdx-video:gdx-video:$gdxVideoVersion"
   }
 }

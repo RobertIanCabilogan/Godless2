@@ -183,8 +183,8 @@ public class Hud {
 
 
 
-        float timerX = camera.position.x + (camera.viewportWidth / 2) - 100; // Right-aligned
-        float timerY = camera.position.y + (camera.viewportHeight / 2) - 30; // Top edge
+        float timerX = camera.position.x + (camera.viewportWidth / 2) - 100;
+        float timerY = camera.position.y + (camera.viewportHeight / 2) - 30;
         int minutes = (int) (timeElapsed / 60);
         int seconds = (int) (timeElapsed % 60);
         largeFont.draw(batch, String.valueOf(GameData.kills), timerX - 850, timerY);
